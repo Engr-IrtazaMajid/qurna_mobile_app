@@ -37,15 +37,15 @@ export const fetchAyahs = async (
       api.get(`/surah/${surahNumber}/${reciter}`),
       withTranslation
         ? api.get(`/surah/${surahNumber}/${translationEdition}`)
-        : null,
+        : Promise.resolve({ data: { data: { ayahs: [] } } }), // Ensure it's never null
       withTranslation && audioReciter
         ? api.get(`/surah/${surahNumber}/${audioReciter.identifier}`)
-        : null,
+        : Promise.resolve({ data: { data: { ayahs: [] } } }), // Ensure it's never null
     ]);
 
   const arabicAyahs = arabicResponse.data.data.ayahs;
-  const translationTextAyahs = translationTextResponse?.data.data.ayahs || [];
-  const translationAudioAyahs = translationAudioResponse?.data.data.ayahs || [];
+  const translationTextAyahs = translationTextResponse.data.data.ayahs || [];
+  const translationAudioAyahs = translationAudioResponse.data.data.ayahs || [];
 
   return arabicAyahs.map((ayah: any, index: number) => ({
     ...ayah,
@@ -55,10 +55,10 @@ export const fetchAyahs = async (
     text: ayah.text,
     audio: ayah.audio,
     translations: {
-      [language]: translationTextAyahs[index]?.text || '',
+      [language]: translationTextAyahs[index]?.text ?? '',
     },
     translationAudios: {
-      [language]: translationAudioAyahs[index]?.audio || '',
+      [language]: translationAudioAyahs[index]?.audio ?? '',
     },
   }));
 };

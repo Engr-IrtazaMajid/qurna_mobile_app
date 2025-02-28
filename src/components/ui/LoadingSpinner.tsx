@@ -40,6 +40,6 @@ const styles = StyleSheet.create({
     color: '#10B981',
   },
   loadingContainerDark: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#0F172A',
   },
 });

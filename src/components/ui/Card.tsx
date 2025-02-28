@@ -34,4 +34,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#1F2937',
     borderColor: '#334155',
   },
-}); 
+});

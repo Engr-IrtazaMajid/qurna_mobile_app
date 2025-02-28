@@ -329,13 +329,15 @@ export const AudioPlayer: React.FC<{ style?: object }> = ({ style }) => {
       <View style={styles.audioControls}>
         <TouchableOpacity onPress={navigateToCurrentAyah}>
           <Text style={[styles.surahText, isDarkMode && styles.textLight]}>
-            {currentSurah.name} • Verse {currentAyah?.numberInSurah}
+            {`${currentSurah.name || ''} • Verse ${
+              currentAyah?.numberInSurah || ''
+            }`}
           </Text>
         </TouchableOpacity>
 
         {isTranslationPlaying && (
           <Text style={styles.translationText}>
-            Playing {audioSettings.selectedLanguage.toUpperCase()}
+            {`Playing ${audioSettings.selectedLanguage.toUpperCase() || ''}`}
           </Text>
         )}
 

@@ -49,6 +49,7 @@ export const AyahList = ({
   } = useQuranStore();
 
   const flatListRef = useRef<FlatList>(null);
+  const ITEM_HEIGHT = 300; // Base height for calculations
 
   const { data: surahs } = useQuery('surahs', fetchSurahs, {
     staleTime: Infinity,
@@ -143,22 +144,32 @@ export const AyahList = ({
     }
   );
 
+  const scrollToAyah = useCallback(
+    (index: number, immediate = false) => {
+      if (!flatListRef.current || !currentSurahAyahs) return;
+
+      flatListRef.current.scrollToIndex({
+        index,
+        animated: !immediate,
+        viewPosition: 0.3, // Position item 30% from the top
+        viewOffset: 100,
+      });
+    },
+    [currentSurahAyahs]
+  );
+
   useEffect(() => {
     if (flatListRef.current && lastPosition?.ayahNumber && ayahs) {
-      setTimeout(() => {
-        const index = ayahs.findIndex(
-          (ayah) => ayah.numberInSurah === lastPosition.ayahNumber
-        );
-        if (index !== -1) {
-          flatListRef.current?.scrollToIndex({
-            index,
-            animated: true,
-            viewPosition: 0.5,
-          });
-        }
-      }, 300);
+      const index = ayahs.findIndex(
+        (ayah) => ayah.numberInSurah === lastPosition.ayahNumber
+      );
+      if (index !== -1) {
+        setTimeout(() => {
+          scrollToAyah(index, true);
+        }, 300);
+      }
     }
-  }, [ayahs, lastPosition]);
+  }, [ayahs, lastPosition, scrollToAyah]);
 
   useEffect(() => {
     if (flatListRef.current && currentAyah && currentSurahAyahs) {
@@ -166,19 +177,20 @@ export const AyahList = ({
         (ayah) => ayah.number === currentAyah.number
       );
       if (index !== -1) {
-        flatListRef.current.scrollToIndex({
-          index,
-          animated: true,
-          viewPosition: 0.5,
-        });
+        scrollToAyah(index);
       }
     }
-  }, [currentAyah?.number, currentSurahAyahs]);
+  }, [currentAyah?.number, currentSurahAyahs, scrollToAyah]);
 
   const handleAyahClick = (ayah: Ayah) => {
     setCurrentAyah(ayah);
     if (!isPlaying) {
       togglePlayback();
+    }
+    const index =
+      currentSurahAyahs?.findIndex((a) => a.number === ayah.number) ?? -1;
+    if (index !== -1) {
+      scrollToAyah(index);
     }
   };
 
@@ -209,6 +221,15 @@ export const AyahList = ({
     }
   };
 
+  const getItemLayout = useCallback(
+    (data: any, index: number) => ({
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    }),
+    []
+  );
+
   const renderItem = useCallback(
     ({ item: ayah }: { item: Ayah }) => (
       <AyahCard
@@ -231,15 +252,6 @@ export const AyahList = ({
   );
 
   const keyExtractor = useCallback((item: Ayah) => item.number.toString(), []);
-
-  const getItemLayout = useCallback(
-    (data: any, index: number) => ({
-      length: 300,
-      offset: 300 * index,
-      index,
-    }),
-    []
-  );
 
   if (isAyahsLoading || !currentSurahAyahs) {
     return (
@@ -271,13 +283,14 @@ export const AyahList = ({
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         getItemLayout={getItemLayout}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        windowSize={7}
+        removeClippedSubviews={false}
         initialNumToRender={10}
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-          autoscrollToTopThreshold: 10,
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            scrollToAyah(info.index, true);
+          }, 100);
         }}
         ListHeaderComponent={() => (
           <View
@@ -314,7 +327,7 @@ export const AyahList = ({
                     isDarkMode && styles.surahNumberDark,
                   ]}
                 >
-                  {currentSurah?.number}/114
+                  {`${currentSurah?.number || ''} / 114`}
                 </Text>
               </View>
 
@@ -372,17 +385,6 @@ export const AyahList = ({
           styles.contentContainer,
           currentAyah && styles.contentContainerWithPlayer,
         ]}
-        onScrollToIndexFailed={(info) => {
-          setTimeout(() => {
-            if (flatListRef.current) {
-              flatListRef.current.scrollToIndex({
-                index: info.index,
-                animated: true,
-                viewPosition: 0.5,
-              });
-            }
-          }, 100);
-        }}
       />
     </View>
   );
@@ -404,11 +406,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    // paddingTop: '50%',
     paddingBottom: 120,
   },
   contentContainerWithPlayer: {
-    // paddingBottom: 150,
+    paddingBottom: 200,
   },
   emptyContainer: {
     flex: 1,

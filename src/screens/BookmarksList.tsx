@@ -75,8 +75,9 @@ export const BookmarksList = ({ navigation }: Props) => {
                       isDarkMode && styles.surahLinkDark,
                     ]}
                   >
-                    Surah {bookmark.ayah.surahNumber} • Verse{' '}
-                    {bookmark.ayah.numberInSurah}
+                    {`Surah ${bookmark.ayah.surahNumber || ''} • Verse ${
+                      bookmark.ayah.numberInSurah || ''
+                    }`}
                   </Text>
                   <Text
                     style={[
