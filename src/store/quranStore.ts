@@ -78,7 +78,7 @@ export const useQuranStore = create<QuranStore>((set, get) => ({
   translationReciters: {},
   audioSettings: {
     withTranslation: false,
-    selectedLanguage: 'ur',
+    selectedLanguage: 'Select Language',
     displayLanguage: 'ur',
   },
   isPlaying: false,

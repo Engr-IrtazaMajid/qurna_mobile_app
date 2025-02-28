@@ -1,17 +1,12 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as Location from 'expo-location';
 import { useQuranStore } from '../store/quranStore';
 import { useQuery } from 'react-query';
 import { fetchPrayerTimes, PrayerTimes } from '../services/prayerApi';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 const DateHeader: React.FC<{
   date: string;
@@ -135,9 +130,12 @@ export const PrayerTimesScreen: React.FC = () => {
       )}
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size='large' color='#10B981' />
-        </View>
+        <LoadingSpinner
+          size='large'
+          color='#10B981'
+          isDarkMode={isDarkMode}
+          style={styles.loadingContainer}
+        />
       ) : error ? (
         <View style={styles.errorContainer}>
           <Icon name='alert-circle' size={48} color='#EF4444' />
@@ -238,10 +236,7 @@ const createStyles = (isDarkMode: boolean, currentAyah: any) =>
       marginTop: 4,
     },
     loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: 200,
+      minHeight: 600,
     },
     textLight: {
       color: '#E5E7EB',

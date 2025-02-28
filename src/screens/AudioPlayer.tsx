@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 import { useQuranStore } from '../store/quranStore';
 import { Surah } from '../types/quran';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 // Add type for navigation
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -67,7 +68,7 @@ const PlayButton: React.FC<{
     style={styles.playButton}
   >
     {isLoading ? (
-      <ActivityIndicator size='small' color='#fff' />
+      <LoadingSpinner text='' size={'small'} color='#fff' isDarkMode={false} />
     ) : isPlaying ? (
       <Ionicons name='pause-circle' size={30} color='#fff' />
     ) : (

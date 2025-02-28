@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useQuery } from 'react-query';
 import { fetchAyahs, fetchReciters } from '../services/api';
 import { useQuranStore } from '../store/quranStore';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 export const ReciterSelector: React.FC = () => {
   const {
@@ -26,9 +27,13 @@ export const ReciterSelector: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size='small' color='#10B981' />
-      </View>
+      <LoadingSpinner
+        text=''
+        size={'small'}
+        color='#10B981'
+        isDarkMode={isDarkMode}
+        style={styles.loadingContainer}
+      />
     );
   }
 
@@ -119,9 +124,6 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: '80%',
   },
-  modalContainerDark: {
-    // backgroundColor: '#1F2937',
-  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -157,8 +159,6 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'transparent',
   },
   icon: {

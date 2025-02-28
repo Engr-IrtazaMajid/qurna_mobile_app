@@ -2,10 +2,8 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   FlatList,
 } from 'react-native';
 import { useQuery } from 'react-query';
@@ -22,87 +20,8 @@ import {
   mapAyahsWithTranslations,
 } from '../utils/quranHelpers';
 import { ReciterSelector } from '../screens/ReciterSelector';
-
-const AyahCard = React.memo(
-  ({
-    ayah,
-    isCurrentAyah,
-    isDarkMode,
-    onPress,
-    onBookmarkToggle,
-    isBookmarked,
-    withTranslation,
-    selectedLanguage,
-  }: {
-    ayah: Ayah;
-    isCurrentAyah: boolean;
-    isDarkMode: boolean;
-    onPress: () => void;
-    onBookmarkToggle: () => void;
-    isBookmarked: boolean;
-    withTranslation: boolean;
-    selectedLanguage: string;
-  }) => (
-    <TouchableOpacity
-      style={[
-        styles.ayahCard,
-        isDarkMode && styles.ayahCardDark,
-        isCurrentAyah && styles.ayahCardActive,
-      ]}
-      onPress={onPress}
-    >
-      <View style={styles.ayahHeader}>
-        <Text
-          style={[styles.ayahNumber, isCurrentAyah && styles.ayahNumberActive]}
-        >
-          {ayah.numberInSurah}
-        </Text>
-        <TouchableOpacity
-          onPress={onBookmarkToggle}
-          style={[
-            styles.bookmarkButton,
-            isDarkMode && styles.bookmarkButtonDark,
-            isBookmarked && styles.bookmarkButtonActive,
-          ]}
-        >
-          <Icon
-            name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
-            size={20}
-            color={isBookmarked ? '#10B981' : '#9CA3AF'}
-            style={{
-              transform: [{ scale: isBookmarked ? 1.1 : 1 }],
-              opacity: isBookmarked ? 1 : 0.6,
-            }}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <Text
-        style={[
-          styles.arabicText,
-          isDarkMode && styles.arabicTextDark,
-          isCurrentAyah && styles.activeText,
-        ]}
-      >
-        {ayah.text}
-      </Text>
-
-      {withTranslation &&
-        ayah.translations &&
-        ayah.translations[selectedLanguage] && (
-          <Text
-            style={[
-              styles.translationText,
-              isDarkMode && styles.translationTextDark,
-              isCurrentAyah && styles.activeTranslationText,
-            ]}
-          >
-            {ayah.translations[selectedLanguage]}
-          </Text>
-        )}
-    </TouchableOpacity>
-  )
-);
+import { AyahCard } from '../components/AyahCard';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 export const AyahList = ({
   route,
@@ -114,7 +33,7 @@ export const AyahList = ({
     currentSurahAyahs,
     currentAyah,
     isPlaying,
-    isLoading,
+    togglePlayback,
     currentSurah,
     setCurrentSurahAyahs,
     currentReciter,
@@ -129,7 +48,6 @@ export const AyahList = ({
     isBookmarked,
   } = useQuranStore();
 
-  const scrollViewRef = useRef<ScrollView>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const { data: surahs } = useQuery('surahs', fetchSurahs, {
@@ -235,16 +153,32 @@ export const AyahList = ({
           flatListRef.current?.scrollToIndex({
             index,
             animated: true,
-            viewPosition: 0.3,
+            viewPosition: 0.5,
           });
         }
       }, 300);
     }
   }, [ayahs, lastPosition]);
 
+  useEffect(() => {
+    if (flatListRef.current && currentAyah && currentSurahAyahs) {
+      const index = currentSurahAyahs.findIndex(
+        (ayah) => ayah.number === currentAyah.number
+      );
+      if (index !== -1) {
+        flatListRef.current.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      }
+    }
+  }, [currentAyah?.number, currentSurahAyahs]);
+
   const handleAyahClick = (ayah: Ayah) => {
-    if (currentAyah?.number !== ayah.number || !isPlaying) {
-      setCurrentAyah(ayah);
+    setCurrentAyah(ayah);
+    if (!isPlaying) {
+      togglePlayback();
     }
   };
 
@@ -300,8 +234,8 @@ export const AyahList = ({
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
-      length: 200, // Approximate height of each item
-      offset: 200 * index,
+      length: 300,
+      offset: 300 * index,
       index,
     }),
     []
@@ -309,9 +243,7 @@ export const AyahList = ({
 
   if (isAyahsLoading || !currentSurahAyahs) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' color='#10B981' />
-      </View>
+      <LoadingSpinner size='large' color='#10B981' isDarkMode={isDarkMode} />
     );
   }
 
@@ -343,6 +275,10 @@ export const AyahList = ({
         windowSize={10}
         removeClippedSubviews={true}
         initialNumToRender={10}
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+          autoscrollToTopThreshold: 10,
+        }}
         ListHeaderComponent={() => (
           <View
             style={[
@@ -436,7 +372,17 @@ export const AyahList = ({
           styles.contentContainer,
           currentAyah && styles.contentContainerWithPlayer,
         ]}
-        onScrollToIndexFailed={() => {}}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            if (flatListRef.current) {
+              flatListRef.current.scrollToIndex({
+                index: info.index,
+                animated: true,
+                viewPosition: 0.5,
+              });
+            }
+          }, 100);
+        }}
       />
     </View>
   );
@@ -458,19 +404,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
+    // paddingTop: '50%',
     paddingBottom: 120,
   },
   contentContainerWithPlayer: {
-    paddingBottom: 96, // Increased padding to account for player
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-  },
-  loadingContainerDark: {
-    backgroundColor: '#0F172A',
+    // paddingBottom: 150,
   },
   emptyContainer: {
     flex: 1,
@@ -593,103 +531,5 @@ const styles = StyleSheet.create({
   languageSelector: {
     flex: 1,
     maxWidth: 200,
-  },
-  ayahCard: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-  },
-  ayahCardDark: {
-    backgroundColor: '#1E293B',
-    borderColor: '#334155',
-  },
-  ayahCardActive: {
-    borderColor: '#10B981',
-    borderWidth: 2,
-    transform: [{ scale: 1.02 }],
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-  },
-  ayahHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    borderBottomColor: '#F1F5F9',
-  },
-  ayahHeaderDark: {
-    borderBottomColor: '#334155',
-  },
-  ayahNumber: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#64748B',
-    letterSpacing: 0.3,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 26,
-  },
-  ayahNumberActive: {
-    color: '#10B981',
-    backgroundColor: '#E5F7F0',
-  },
-  bookmarkButton: {
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  bookmarkButtonDark: {
-    backgroundColor: '#334155',
-    borderColor: '#475569',
-  },
-  bookmarkButtonActive: {
-    backgroundColor: '#E8FFF7',
-    borderColor: '#10B981',
-  },
-  bookmarkButtonActiveDark: {
-    backgroundColor: '#064E3B',
-    borderColor: '#10B981',
-  },
-  arabicText: {
-    fontSize: 28,
-    color: '#0F172A',
-    textAlign: 'right',
-    lineHeight: 52,
-    fontFamily: 'arabic',
-    marginBottom: 24,
-    letterSpacing: 1.2,
-  },
-  arabicTextDark: {
-    color: '#F8FAFC',
-  },
-  translationText: {
-    fontSize: 16,
-    color: '#475569',
-    lineHeight: 28,
-    letterSpacing: 0.3,
-  },
-  translationTextDark: {
-    color: '#E2E8F0',
-  },
-  textLight: {
-    color: '#F8FAFC',
-  },
-  activeText: {
-    color: '#10B981',
-  },
-  activeTranslationText: {
-    color: '#10B981',
   },
 });

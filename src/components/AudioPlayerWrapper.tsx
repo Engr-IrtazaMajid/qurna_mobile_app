@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigationState } from '@react-navigation/native';
 import { AudioPlayer } from '../screens/AudioPlayer';
 
@@ -14,11 +14,19 @@ export const AudioPlayerWrapper = () => {
       currentRoute.state?.routes[currentRoute.state.index || 0]?.name ===
         'Home');
 
-  if (!shouldShowUI) {
-    return <AudioPlayer style={{ height: 0, opacity: 0 }} />;
-  }
+  const [isVisible, setIsVisible] = useState(shouldShowUI);
 
-  const bottomPosition = isMainTab ? 60 : 0;
+  useEffect(() => {
+    setIsVisible(shouldShowUI);
+  }, [shouldShowUI]);
 
-  return <AudioPlayer style={{ bottom: bottomPosition }} />;
+  return (
+    <AudioPlayer
+      style={{
+        bottom: isVisible ? (isMainTab ? 60 : 0) : 0,
+        height: isVisible ? 'auto' : 0,
+        opacity: isVisible ? 1 : 0,
+      }}
+    />
+  );
 };

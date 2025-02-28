@@ -7,13 +7,11 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import { RootStackParamList, TabParamList } from '../types/navigation';
 import { useQuranStore } from '../store/quranStore';
-
 import { SurahList } from '../screens/SurahList';
 import { AyahList } from '../screens/AyahList';
 import { BookmarksList } from '../screens/BookmarksList';
 import { PrayerTimesScreen } from '../screens/PrayerTimes';
 import { Layout } from '../screens/Layout';
-import { AudioPlayer } from '../screens/AudioPlayer';
 import { AudioPlayerWrapper } from '../components/AudioPlayerWrapper';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
